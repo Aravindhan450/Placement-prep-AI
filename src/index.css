@@ -1,0 +1,123 @@
+@import url('https://fonts.googleapis.com/css2?family=Syne:wght@400;500;700;800&display=swap');
+
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+}
+
+body {
+  @apply bg-[#07070f] text-white antialiased;
+  font-family: 'Syne', -apple-system, system-ui, sans-serif;
+}
+
+*,
+*::before,
+*::after {
+  font-family: inherit;
+}
+
+/* Ambient background gradient */
+.dark-ambient {
+  position: fixed;
+  inset: 0;
+  pointer-events: none;
+  z-index: 0;
+  background:
+    radial-gradient(ellipse 70% 50% at 15% 15%, #6366f118, transparent 55%),
+    radial-gradient(ellipse 50% 60% at 85% 85%, #a78bfa12, transparent 55%),
+    linear-gradient(#ffffff03 1px, transparent 1px),
+    linear-gradient(90deg, #ffffff03 1px, transparent 1px);
+  background-size: auto, auto, 48px 48px, 48px 48px;
+}
+
+/* Glass card effect */
+.glass-card {
+  @apply bg-[#0a0a18] border border-[#1a1a2e] rounded-xl backdrop-blur-md;
+}
+
+/* AI hover animation */
+.ai-hover {
+  @apply transition-all duration-300;
+}
+
+.ai-hover:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 20px 60px rgba(99,102,241,0.15);
+  border-color: rgb(99 102 241);
+}
+
+/* Premium button */
+.btn-premium {
+  @apply w-full py-3 rounded-lg bg-indigo-600 hover:bg-indigo-500 
+         transition font-semibold shadow-lg shadow-indigo-600/20
+         disabled:opacity-50 disabled:cursor-not-allowed;
+}
+
+/* Dark input */
+.input-dark {
+  @apply w-full bg-transparent border border-[#1a1a2e] rounded-lg p-5 
+         text-gray-200 placeholder:text-gray-500
+         focus:border-indigo-500 focus:outline-none transition;
+}
+
+/* Skill bar animation */
+@keyframes skill-fill {
+  from { width: 0; }
+  to { width: var(--skill-width); }
+}
+
+.skill-bar-fill {
+  animation: skill-fill 1s ease-out forwards;
+}
+
+/* Pulse animation */
+@keyframes pulse-glow {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
+}
+
+.pulse-glow {
+  animation: pulse-glow 2s ease-in-out infinite;
+}
+
+/* Metric card */
+.metric-card {
+  @apply glass-card p-6 space-y-2;
+}
+
+/* Badge styles */
+.badge {
+  @apply px-3 py-1 rounded-full text-xs font-medium;
+}
+
+.badge-indigo {
+  @apply bg-indigo-500/15 text-indigo-400 border border-indigo-500/30;
+}
+
+.badge-purple {
+  @apply bg-purple-500/15 text-purple-400 border border-purple-500/30;
+}
+
+.badge-green {
+  @apply bg-green-500/15 text-green-400 border border-green-500/30;
+}
+
+.badge-amber {
+  @apply bg-amber-500/15 text-amber-400 border border-amber-500/30;
+}
+
+.badge-red {
+  @apply bg-red-500/15 text-red-400 border border-red-500/30;
+}
+
+/* Auth styles (backwards compatibility) */
+.auth-input-field {
+  @apply input-dark;
+}
+
+.auth-button {
+  @apply btn-premium;
+}
