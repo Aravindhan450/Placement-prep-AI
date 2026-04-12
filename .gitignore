@@ -1,0 +1,11 @@
+node_modules/
+dist/
+.vercel/
+
+# Local environment files and secrets
+.env
+.env.*
+!.env.example
+
+# Local editor/workspace settings
+.vscode/
