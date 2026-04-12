@@ -24,7 +24,6 @@ export default function Navbar() {
     { path: "/interview", label: "Interview", icon: Building2 },
     { path: "/", label: "Practice", icon: Brain },
     { path: "/roadmaps", label: "Roadmaps", icon: Map },
-    { path: "/resume", label: "Resume", icon: FileText },
   ];
 
   return (
@@ -42,7 +41,7 @@ export default function Navbar() {
           {user ? (
             <>
               {/* Navigation Links - Center aligned */}
-              <div className="hidden md:flex items-center space-x-1 flex-1 justify-center">
+              <div className="hidden md:flex items-center space-x-2 flex-1 justify-center">
                 {navItems.map((item) => {
                   const Icon = item.icon;
                   const isActive = location.pathname === item.path;

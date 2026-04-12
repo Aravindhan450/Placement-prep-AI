@@ -10,7 +10,7 @@ import DashboardPage from "./pages/DashboardPage";
 import RoadmapPage from "./pages/RoadmapPage";
 import SummaryPage from "./pages/SummaryPage";
 import InterviewSimulationPage from "./pages/InterviewSimulationPage";
-import ResumePage from "./pages/ResumePage";
+// ...existing code...
 import { useAuth } from "./contexts/AuthContext";
 
 function AppContent() {
@@ -55,7 +55,7 @@ function AppContent() {
           <Route path="/dashboard" element={<DashboardPage />} />
           <Route path="/experiment-dashboard" element={<AnalyticsPage />} />
           <Route path="/roadmaps" element={<RoadmapPage />} />
-          <Route path="/resume" element={<ResumePage />} />
+// ...existing code...
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </main>
