@@ -12,7 +12,8 @@
     "retrieve:kb": "node scripts/retrieve-knowledge.js"
   },
   "dependencies": {
-    "@supabase/supabase-js": "^2.97.0",
+    "@supabase/ssr": "^0.10.2",
+    "@supabase/supabase-js": "^2.104.0",
     "@vercel/node": "^3.0.21",
     "clsx": "^2.1.1",
     "html2pdf.js": "^0.14.0",
