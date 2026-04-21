@@ -61,7 +61,7 @@ const COMPANIES: Company[] = [
 const ROLES: Option[] = [
   { id: "sde",              label: "SDE / Software Engineer" },
   { id: "data_analyst",     label: "Data Analyst" },
-  { id: "product_manager",  label: "Product Manager" },
+  { id: "ai_engineer",      label: "AI Engineer" },
   { id: "data_scientist",   label: "Data Scientist" },
 ];
 
