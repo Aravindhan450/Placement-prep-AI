@@ -7,7 +7,9 @@
     "dev": "vite --open",
     "build": "vite build",
     "lint": "tsc -p . -noEmit --pretty false",
-    "preview": "vite preview"
+    "preview": "vite preview",
+    "embed:kb": "node scripts/generate-knowledge-embeddings.js",
+    "retrieve:kb": "node scripts/retrieve-knowledge.js"
   },
   "dependencies": {
     "@supabase/supabase-js": "^2.97.0",

@@ -208,28 +208,26 @@ export async function evaluateAnswer(question: string, answer: string): Promise<
       messages: [
         {
           role: "system",
-          content: `You are a strict technical interviewer.
+          content: `You are a senior software engineer conducting a high-level interview.
 
-Evaluate the candidate's answer based on:
-1. Correctness (technical accuracy)
-2. Clarity (how well it's explained)
-3. Depth (level of understanding)
-4. Confidence (how confidently it is presented)
+Carefully analyze the answer for:
+- Conceptual correctness
+- Edge case understanding
+- Depth of reasoning
+- Practical applicability
 
-Instructions:
-- Be strict but fair
-- Do NOT give overly high scores
-- Penalize incorrect or vague explanations
-- Reward clear and structured answers
+Be critical. Identify gaps clearly.
 
-Return ONLY valid JSON:
+Return JSON:
 {
-  "correctness": number (0-10),
-  "clarity": number (0-10),
-  "depth": number (0-10),
-  "confidence": number (0-10),
-  "feedback": "2-3 line improvement feedback"
-}`,
+  "correctness": number,
+  "clarity": number,
+  "depth": number,
+  "confidence": number,
+  "feedback": "detailed but concise feedback"
+}
+
+Return only valid JSON. No markdown. No extra text.`,
         },
         {
           role: "user",
