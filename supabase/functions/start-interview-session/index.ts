@@ -98,9 +98,9 @@ function normalizeScore(value: unknown): number {
     throw new Error("Invalid numeric score");
   }
 
-  // Accept either 0-1 or 0-100, normalize to 0-100.
-  const normalized = value <= 1 ? value * 100 : value;
-  return Math.round(clamp(normalized, 0, 100));
+  // Primary target scale is 0-10. Keep backward compatibility for 0-1 / 0-100.
+  const normalized = value <= 1 ? value * 10 : value > 10 ? value / 10 : value;
+  return Number(clamp(normalized, 0, 10).toFixed(1));
 }
 
 function parseEvaluation(raw: string): EvaluationScores {
@@ -146,11 +146,22 @@ export async function generateQuestion(topic: string, difficulty: Difficulty): P
         {
           role: "system",
           content:
-            "You are a senior interviewer. Generate exactly one concise, realistic interview question. Return only the question text. Do not include any answer, hint, explanation, numbering, or markdown.",
+            "You are an experienced technical interviewer.",
         },
         {
           role: "user",
-          content: `Topic: ${cleanTopic}\nDifficulty: ${cleanDifficulty}\nGenerate one interview question.`,
+          content: `Generate ONE interview question based on:
+Topic: ${cleanTopic}
+Difficulty: ${cleanDifficulty}
+
+Rules:
+- Do NOT provide the answer
+- Keep it concise (max 3-4 lines)
+- Make it realistic (similar to actual interviews)
+- Focus on conceptual understanding, not trivia
+
+Output:
+Only the question text. No explanation.`,
         },
       ],
     });
@@ -163,7 +174,9 @@ export async function generateQuestion(topic: string, difficulty: Difficulty): P
     const question = content
       .split("\n")
       .map((line) => line.trim())
-      .filter(Boolean)[0] ?? "";
+      .filter(Boolean)
+      .slice(0, 4)
+      .join("\n");
 
     if (!question) {
       throw new Error("Invalid question generated");
@@ -195,21 +208,36 @@ export async function evaluateAnswer(question: string, answer: string): Promise<
       messages: [
         {
           role: "system",
-          content: `You are an interview evaluator.
-Score on 0-100 for: correctness, clarity, depth, confidence.
-Return STRICT JSON only with exactly this shape:
+          content: `You are a strict technical interviewer.
+
+Evaluate the candidate's answer based on:
+1. Correctness (technical accuracy)
+2. Clarity (how well it's explained)
+3. Depth (level of understanding)
+4. Confidence (how confidently it is presented)
+
+Instructions:
+- Be strict but fair
+- Do NOT give overly high scores
+- Penalize incorrect or vague explanations
+- Reward clear and structured answers
+
+Return ONLY valid JSON:
 {
-  "correctness": number,
-  "clarity": number,
-  "depth": number,
-  "confidence": number,
-  "feedback": string
-}
-No markdown. No extra keys. No explanation outside JSON.`,
+  "correctness": number (0-10),
+  "clarity": number (0-10),
+  "depth": number (0-10),
+  "confidence": number (0-10),
+  "feedback": "2-3 line improvement feedback"
+}`,
         },
         {
           role: "user",
-          content: `Question:\n${cleanQuestion}\n\nCandidate Answer:\n${cleanAnswer}`,
+          content: `Question:
+${cleanQuestion}
+
+Answer:
+${cleanAnswer}`,
         },
       ],
     });
@@ -223,11 +251,128 @@ No markdown. No extra keys. No explanation outside JSON.`,
   }, { retries: 4, baseDelayMs: 500 });
 }
 
+export async function generateFollowUpQuestion(question: string, answer: string): Promise<string> {
+  assertOpenRouterKey();
+
+  const cleanQuestion = String(question ?? "").trim();
+  const cleanAnswer = String(answer ?? "").trim();
+
+  if (!cleanQuestion) {
+    throw new Error("question is required");
+  }
+
+  if (!cleanAnswer) {
+    throw new Error("answer is required");
+  }
+
+  return withRetry(async () => {
+    const completion = await client.chat.completions.create({
+      model: "meta-llama/llama-3.3-70b-instruct:free",
+      temperature: 0.6,
+      max_tokens: 140,
+      messages: [
+        {
+          role: "system",
+          content: "You are an interviewer.",
+        },
+        {
+          role: "user",
+          content: `Based on the previous answer, generate ONE follow-up question that:
+- Targets weak areas
+- Increases difficulty slightly
+- Tests deeper understanding
+
+Previous Question:
+${cleanQuestion}
+
+User Answer:
+${cleanAnswer}
+
+Output:
+Only the follow-up question.`,
+        },
+      ],
+    });
+
+    const content = completion.choices?.[0]?.message?.content?.trim() ?? "";
+    if (!content) {
+      throw new Error("Empty follow-up question returned by model");
+    }
+
+    const followUpQuestion = content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, 4)
+      .join("\n");
+
+    if (!followUpQuestion) {
+      throw new Error("Invalid follow-up question generated");
+    }
+
+    return followUpQuestion;
+  });
+}
+
+export async function suggestNextTopic(scores: Record<string, unknown>): Promise<string> {
+  assertOpenRouterKey();
+
+  if (!scores || typeof scores !== "object" || Array.isArray(scores)) {
+    throw new Error("scores must be an object");
+  }
+
+  return withRetry(async () => {
+    const completion = await client.chat.completions.create({
+      model: "openai/gpt-oss-120b:free",
+      temperature: 0.2,
+      max_tokens: 120,
+      messages: [
+        {
+          role: "system",
+          content: "You are an AI mentor.",
+        },
+        {
+          role: "user",
+          content: `Based on these scores:
+${JSON.stringify(scores)}
+
+Suggest the next topic to focus on.
+
+Rules:
+- Prioritize weakest area
+- Be specific
+- Keep answer short
+
+Output:
+One recommended topic with reason.`,
+        },
+      ],
+    });
+
+    const content = completion.choices?.[0]?.message?.content?.trim() ?? "";
+    if (!content) {
+      throw new Error("Empty next-topic recommendation returned by model");
+    }
+
+    return content
+      .split("\n")
+      .map((line) => line.trim())
+      .filter(Boolean)
+      .slice(0, 2)
+      .join("\n");
+  });
+}
+
 export function calculateReadiness(scores: Omit<EvaluationScores, "feedback">): number {
-  const correctness = clamp(scores.correctness, 0, 100);
-  const clarity = clamp(scores.clarity, 0, 100);
-  const depth = clamp(scores.depth, 0, 100);
-  const confidence = clamp(scores.confidence, 0, 100);
+  const toHundredScale = (value: number): number => {
+    const clamped = clamp(value, 0, 100);
+    return clamped <= 10 ? clamped * 10 : clamped;
+  };
+
+  const correctness = toHundredScale(scores.correctness);
+  const clarity = toHundredScale(scores.clarity);
+  const depth = toHundredScale(scores.depth);
+  const confidence = toHundredScale(scores.confidence);
 
   const readiness =
     correctness * 0.4 +
@@ -284,6 +429,22 @@ Deno.serve(async (req) => {
       const readiness = calculateReadiness(evaluation);
 
       return new Response(JSON.stringify({ success: true, evaluation, readiness }), {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
+
+    if (action === "generate-followup-question") {
+      const followUpQuestion = await generateFollowUpQuestion(body.question, body.answer);
+      return new Response(JSON.stringify({ success: true, followUpQuestion }), {
+        status: 200,
+        headers: corsHeaders,
+      });
+    }
+
+    if (action === "suggest-next-topic") {
+      const recommendation = await suggestNextTopic(body.scores);
+      return new Response(JSON.stringify({ success: true, recommendation }), {
         status: 200,
         headers: corsHeaders,
       });
